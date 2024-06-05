@@ -12,8 +12,6 @@ defmodule AirframeErrorTest do
   end
 
   test "formats message when Ecto.Schema struct" do
-    struct = %Dummy{id: 1}
-
     msg =
       %Airframe.UnauthorizedError{
         policy: Airframe.Policy,
@@ -24,7 +22,7 @@ defmodule AirframeErrorTest do
       |> Airframe.UnauthorizedError.message()
 
     assert msg ==
-             "policy=Airframe.Policy did not allow action=:write for " +
-               "context=#Dummy<id=me> and subject=#Dummy<id=subject>"
+             "policy=Airframe.Policy did not allow action=:write for " <>
+               "context=#AirframeErrorTest.Dummy<id=me> and subject=#AirframeErrorTest.Dummy<id=subject>"
   end
 end
