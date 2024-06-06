@@ -1,7 +1,7 @@
 defmodule Airframe.UnauthorizedError do
-  defexception [:policy, :context, :action, :subject]
+  defexception [:subject, :context, :action, :policy]
 
-  def message(%__MODULE__{policy: p, context: c, action: a, subject: s}) do
+  def message(%__MODULE__{subject: s, context: c, action: a, policy: p}) do
     "policy=#{inspect(p)} did not allow action=#{inspect(a)} for context=#{show(c)} and subject=#{show(s)}"
   end
 

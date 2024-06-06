@@ -18,9 +18,9 @@ defmodule Airframe.Policy do
 
   """
   @callback allow?(
+              subject :: Airframe.subject(),
               context :: Airframe.context(),
-              action :: Airframe.action(),
-              subject :: Airframe.subject()
+              action :: Airframe.action()
             ) :: boolean
 
   @doc """
@@ -59,8 +59,8 @@ defmodule Airframe.Policy do
       # are we delegating to another module?
       {:ok, module} when is_atom(module) ->
         quote do
-          def allow?(context, action, subject) do
-            unquote(module).allow?(context, action, subject)
+          def allow?(subject, context, action) do
+            unquote(module).allow?(subject, context, action)
           end
         end
 

@@ -17,16 +17,16 @@ defmodule AirframePolicyTest do
     end
 
     test "default false policy always rejects" do
-      refute Airframe.allow?(DefaultFalsePolicy, :me, :write, %{})
+      refute Airframe.allowed?(:my_subject, :me, :write, DefaultFalsePolicy)
     end
 
     test "default true policy returns true" do
-      assert Airframe.allow?(DefaultTruePolicy, :me, :write, %{})
+      assert Airframe.allowed?(:my_subject, :me, :write, DefaultTruePolicy)
     end
 
     test "no default and no allow?/3 raises FunctionClauseError" do
       assert_raise FunctionClauseError, fn ->
-        Airframe.allow?(NoDefaultPolicy, :me, :write, %{})
+        Airframe.allowed?(:my_subject, :me, :write, NoDefaultPolicy)
       end
     end
   end
@@ -37,19 +37,19 @@ defmodule AirframePolicyTest do
   end
 
   test "implementing (_,_,_) -> true always allows" do
-    assert Airframe.allow?(AllowPolicy, :me, :write, %{})
+    assert Airframe.allowed?(:my_subject, :me, :write, AllowPolicy)
   end
 
   defmodule AdminPolicy do
     use Airframe.Policy, default: false
-    def allow?(:admin, _, _), do: true
+    def allow?(_, :admin, _), do: true
   end
 
   test "allows admin in admin policy" do
-    assert Airframe.allow?(AdminPolicy, :admin, :write, %{})
+    assert Airframe.allowed?(:my_subject, :admin, :write, AdminPolicy)
   end
 
   test "refuses me in admin policy" do
-    refute Airframe.allow?(AdminPolicy, :me, :write, %{})
+    refute Airframe.allowed?(:my_subject, :me, :write, AdminPolicy)
   end
 end

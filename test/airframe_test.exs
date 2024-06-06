@@ -4,31 +4,31 @@ defmodule AirframeTest do
 
   defmodule Context do
     use Airframe.Policy
-    def allow?(:me, :read, _), do: true
-    def allow?(:me, :write, _), do: false
+    def allow?(_, :me, :read), do: true
+    def allow?(_, :me, :write), do: false
   end
 
-  test "allow?/4" do
-    assert Airframe.allow?(Context, :me, :read, %{})
-    refute Airframe.allow?(Context, :me, :write, %{})
+  test "allowed?/4" do
+    assert Airframe.allowed?(:my_subject, :me, :read, Context)
+    refute Airframe.allowed?(:my_subject, :me, :write, Context)
   end
 
-  test "allow/4" do
-    assert Airframe.allow(Context, :me, :read, %{}) == :ok
+  test "allowed/4" do
+    assert Airframe.allowed(:my_subject, :me, :read, Context) == {:ok, :my_subject}
 
-    assert Airframe.allow(Context, :me, :write, %{}) ==
+    assert Airframe.allowed(:my_subject, :me, :write, Context) ==
              {:error,
               %Airframe.UnauthorizedError{
                 policy: Context,
                 context: :me,
                 action: :write,
-                subject: %{}
+                subject: :my_subject
               }}
   end
 
-  test "allow!/4" do
+  test "allowed!/4" do
     assert_raise Airframe.UnauthorizedError, fn ->
-      Airframe.allow!(Context, :me, :write, %{})
+      Airframe.allowed!(:my_subject, :me, :write, Context)
     end
   end
 end

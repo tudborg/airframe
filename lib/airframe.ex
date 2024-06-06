@@ -1,32 +1,32 @@
 defmodule Airframe do
-  @type policy :: module()
+  @type subject :: any()
   @type context :: any()
   @type action :: any()
-  @type subject :: any()
+  @type policy :: module()
 
-  @spec allow?(
-          policy :: Airframe.policy(),
+  @spec allowed?(
+          subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
-          subject :: Airframe.subject()
+          policy :: Airframe.policy()
         ) :: boolean
-  def allow?(policy, context, action, subject) do
-    case policy.allow?(context, action, subject) do
+  def allowed?(subject, context, action, policy) do
+    case policy.allow?(subject, context, action) do
       true -> true
       false -> false
     end
   end
 
-  @spec allow(
-          policy :: Airframe.policy(),
+  @spec allowed(
+          subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
-          subject :: Airframe.subject()
+          policy :: Airframe.policy()
         ) :: :ok | {:error, Airframe.UnauthorizedError.t()}
-  def allow(policy, context, action, subject) do
-    case policy.allow?(context, action, subject) do
+  def allowed(subject, context, action, policy) do
+    case policy.allow?(subject, context, action) do
       true ->
-        :ok
+        {:ok, subject}
 
       false ->
         {:error,
@@ -39,15 +39,16 @@ defmodule Airframe do
     end
   end
 
-  @spec allow!(
-          policy :: Airframe.policy(),
+  @spec allowed!(
+          subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
-          subject :: Airframe.subject()
+          policy :: Airframe.policy()
         ) :: :ok | no_return()
-  def allow!(policy, context, action, subject) do
-    with {:error, error} <- allow(policy, context, action, subject) do
-      raise error
+  def allowed!(subject, context, action, policy) do
+    case allowed(subject, context, action, policy) do
+      {:ok, subject} -> subject
+      {:error, error} -> raise error
     end
   end
 
@@ -55,52 +56,52 @@ defmodule Airframe do
   ## Airframe macros for checking policies.
   ##
   @doc """
-  Macro version of `Airframe.allow?/4`.
+  Macro version of `Airframe.allowed?/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allow?(context, subject) do
+  defmacro allowed?(subject, context) do
     quote do
-      Airframe.allow?(
-        unquote(__CALLER__.module),
+      Airframe.allowed?(
+        unquote(subject),
         unquote(context),
         unquote(elem(__CALLER__.function, 0)),
-        unquote(subject)
+        unquote(__CALLER__.module)
       )
     end
   end
 
   @doc """
-  Macro version of `Airframe.allow!/4`.
+  Macro version of `Airframe.allowed!/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allow!(context, subject) do
+  defmacro allowed!(subject, context) do
     quote do
-      Airframe.allow!(
-        unquote(__CALLER__.module),
+      Airframe.allowed!(
+        unquote(subject),
         unquote(context),
         unquote(elem(__CALLER__.function, 0)),
-        unquote(subject)
+        unquote(__CALLER__.module)
       )
     end
   end
 
   @doc """
-  Macro version of `Airframe.allow/4`.
+  Macro version of `Airframe.allowed/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allow(context, subject) do
+  defmacro allowed(subject, context) do
     quote do
-      Airframe.allow(
-        unquote(__CALLER__.module),
+      Airframe.allowed(
+        unquote(subject),
         unquote(context),
         unquote(elem(__CALLER__.function, 0)),
-        unquote(subject)
+        unquote(__CALLER__.module)
       )
     end
   end
