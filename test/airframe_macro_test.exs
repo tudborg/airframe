@@ -5,23 +5,17 @@ defmodule AirframeMacroTest do
   defmodule TestContext do
     defmodule TestPolicy do
       use Airframe.Policy
-      def allow?(_subject, _context, :a?), do: true
-      def allow?(_subject, _context, :b?), do: false
+      def allow(_subject, _context, :a), do: true
+      def allow(_subject, _context, :b), do: false
 
-      def allow?(_subject, _context, :a), do: true
-      def allow?(_subject, _context, :b), do: false
+      def allow(_subject, _context, :a!), do: true
+      def allow(_subject, _context, :b!), do: false
 
-      def allow?(_subject, _context, :a!), do: true
-      def allow?(_subject, _context, :b!), do: false
-
-      def allow?(nil, _context, :no_subject?), do: true
-      def allow?(_subject, _context, :custom_action), do: true
+      def allow(nil, _context, :no_subject), do: true
+      def allow(_subject, _context, :custom_action), do: true
     end
 
     use Airframe.Policy, delegate: TestPolicy
-
-    def a?(), do: Airframe.allowed?(:my_subject, :me)
-    def b?(), do: Airframe.allowed?(:my_subject, :me)
 
     def a(), do: Airframe.allowed(:my_subject, :me)
     def b(), do: Airframe.allowed(:my_subject, :me)
@@ -29,26 +23,13 @@ defmodule AirframeMacroTest do
     def a!(), do: Airframe.allowed!(:my_subject, :me)
     def b!(), do: Airframe.allowed!(:my_subject, :me)
 
-    def no_subject?(), do: Airframe.allowed?(:me)
-
-    def with_action?(), do: Airframe.allowed?(:my_subject, :me, :custom_action)
-  end
-
-  test "macro Airframe.allowed?/2 of function Airframe.allowed?/4" do
-    assert TestContext.a?()
-    refute TestContext.b?()
+    def with_action(), do: Airframe.allowed(:my_subject, :me, :custom_action)
   end
 
   test "macro Airframe.allowed/2 of function Airframe.allowed/4" do
     assert {:ok, :my_subject} == TestContext.a()
 
-    assert {:error,
-            %Airframe.UnauthorizedError{
-              policy: TestContext,
-              action: :b,
-              context: :me,
-              subject: :my_subject
-            }} == TestContext.b()
+    assert {:error, {:unauthorized, _}} = TestContext.b()
   end
 
   test "macro Airframe.allowed!/2 of function Airframe.allowed!/4" do
@@ -56,11 +37,7 @@ defmodule AirframeMacroTest do
     assert_raise Airframe.UnauthorizedError, fn -> TestContext.b!() end
   end
 
-  test "macro Airframe.allowed?/1 of function Airframe.allowed?/4" do
-    assert TestContext.no_subject?()
-  end
-
-  test "macro Airframe.allowed?/3 of function Airframe.allowed?/4" do
-    assert TestContext.with_action?()
+  test "macro custom action" do
+    assert TestContext.with_action()
   end
 end

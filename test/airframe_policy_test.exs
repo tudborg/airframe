@@ -13,43 +13,55 @@ defmodule AirframePolicyTest do
 
     defmodule NoDefaultPolicy do
       use Airframe.Policy
-      def allow?(:very, :specific, :values), do: true
+      def allow(:very, :specific, :values), do: true
     end
 
     test "default false policy always rejects" do
-      refute Airframe.allowed?(:my_subject, :me, :write, DefaultFalsePolicy)
+      assert {:error, {:unauthorized, _}} =
+               Airframe.allowed(:my_subject, :me, :write, DefaultFalsePolicy)
     end
 
     test "default true policy returns true" do
-      assert Airframe.allowed?(:my_subject, :me, :write, DefaultTruePolicy)
+      assert {:ok, :my_subject} = Airframe.allowed(:my_subject, :me, :write, DefaultTruePolicy)
     end
 
-    test "no default and no allow?/3 raises FunctionClauseError" do
+    test "no default and no allow/3 raises FunctionClauseError" do
       assert_raise FunctionClauseError, fn ->
-        Airframe.allowed?(:my_subject, :me, :write, NoDefaultPolicy)
+        Airframe.allowed(:my_subject, :me, :write, NoDefaultPolicy)
       end
     end
   end
 
   defmodule AllowPolicy do
     use Airframe.Policy
-    def allow?(_, _, _), do: true
+    def allow(_, _, _), do: true
   end
 
   test "implementing (_,_,_) -> true always allows" do
-    assert Airframe.allowed?(:my_subject, :me, :write, AllowPolicy)
+    assert {:ok, :my_subject} = Airframe.allowed(:my_subject, :me, :write, AllowPolicy)
   end
 
   defmodule AdminPolicy do
     use Airframe.Policy, default: false
-    def allow?(_, :admin, _), do: true
+    def allow(_, :admin, _), do: true
   end
 
   test "allows admin in admin policy" do
-    assert Airframe.allowed?(:my_subject, :admin, :write, AdminPolicy)
+    assert {:ok, :my_subject} = Airframe.allowed(:my_subject, :admin, :write, AdminPolicy)
   end
 
   test "refuses me in admin policy" do
-    refute Airframe.allowed?(:my_subject, :me, :write, AdminPolicy)
+    assert {:error, {:unauthorized, _}} =
+             Airframe.allowed(:my_subject, :me, :write, AdminPolicy)
+  end
+
+  defmodule ScopingPolicy do
+    use Airframe.Policy
+    def allow(:my_subject, :me, :read), do: {:ok, :my_scoped_subject}
+  end
+
+  test "allow scopes the subject" do
+    assert {:ok, :my_scoped_subject} =
+             Airframe.allowed(:my_subject, :me, :read, ScopingPolicy)
   end
 end

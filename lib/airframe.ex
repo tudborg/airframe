@@ -5,7 +5,6 @@ defmodule Airframe do
   @type policy :: module()
 
   # Policy
-  defdelegate allowed?(subject, context, action, policy), to: Airframe.Policy
   defdelegate allowed(subject, context, action, policy), to: Airframe.Policy
   defdelegate allowed!(subject, context, action, policy), to: Airframe.Policy
 
@@ -23,31 +22,12 @@ defmodule Airframe do
   ##
 
   @doc """
-  Macro version of `Airframe.allowed?/4`.
-
-  Infers the policy from the calling module,
-  and the action from the calling function name.
-  """
-  defmacro allowed?(subject \\ nil, context, action \\ nil) do
-    action = action || elem(__CALLER__.function, 0)
-
-    quote do
-      Airframe.allowed?(
-        unquote(subject),
-        unquote(context),
-        unquote(action),
-        unquote(__CALLER__.module)
-      )
-    end
-  end
-
-  @doc """
   Macro version of `Airframe.allowed!/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed!(subject \\ nil, context, action \\ nil) do
+  defmacro allowed!(subject, context, action \\ nil) do
     action = action || elem(__CALLER__.function, 0)
 
     quote do
@@ -66,7 +46,7 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed(subject \\ nil, context, action \\ nil) do
+  defmacro allowed(subject, context, action \\ nil) do
     action = action || elem(__CALLER__.function, 0)
 
     quote do

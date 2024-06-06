@@ -2,63 +2,54 @@ defmodule Airframe.Policy do
   @moduledoc """
   The Policy behaviour.
 
-  To use this module, you must implement the `Airframe.Policy.allow?/3` callback.
-
-  When using this module (`use Airframe.Policy`), an automatic implementation of
-  `allow?/3` is generated that always returns false, such that you only have
-  to implement the `allow?/3` callback for any _allowed_ combinations of
-  `context`, `action`, and `subject`.
+  To use this module, you must implement the `Airframe.Policy.allow/3` callback.
   """
 
   @doc """
   Checks if the `context` is allowed to perform the `action` on the `subject`.
 
-  NOTE: that the `subject` is passed through from the checking side,
-  and could be anything.
-
+  Can return plain true/false, or a tuple `{:scoped, alternative_subject}` to allow the action with a different subject.
+  Can alsi return `{:error, reason :: any()}` which will be passed along to the caller.
   """
-  @callback allow?(
+  @callback allow(
               subject :: Airframe.subject(),
               context :: Airframe.context(),
               action :: Airframe.action()
-            ) :: boolean
-
-  ##
-  ## Functions
-  ##
-
-  @spec allowed?(
-          subject :: Airframe.subject(),
-          context :: Airframe.context(),
-          action :: Airframe.action(),
-          policy :: Airframe.policy()
-        ) :: boolean
-  def allowed?(subject, context, action, policy) do
-    case policy.allow?(subject, context, action) do
-      true -> true
-      false -> false
-    end
-  end
+            ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
   @spec allowed(
           subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
           policy :: Airframe.policy()
-        ) :: :ok | {:error, Airframe.UnauthorizedError.t()}
+        ) ::
+          {:ok, narrowed_subject :: Airframe.subject()}
+          | {:error, :unauthorized}
+          | {:error, any()}
   def allowed(subject, context, action, policy) do
-    case allowed?(subject, context, action, policy) do
+    case policy.allow(subject, context, action) do
+      # allow with same subject:
       true ->
         {:ok, subject}
 
+      # dont allow:
       false ->
         {:error,
-         %Airframe.UnauthorizedError{
-           policy: policy,
-           context: context,
-           action: action,
-           subject: subject
-         }}
+         {:unauthorized,
+          %Airframe.UnauthorizedError{
+            policy: policy,
+            context: context,
+            action: action,
+            subject: subject
+          }}}
+
+      # allowed, but policy wants to define the scope:
+      {:ok, scoped} ->
+        {:ok, scoped}
+
+      # policy error. forward to caller:
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 
@@ -67,11 +58,20 @@ defmodule Airframe.Policy do
           context :: Airframe.context(),
           action :: Airframe.action(),
           policy :: Airframe.policy()
-        ) :: :ok | no_return()
+        ) :: Airframe.subject() | no_return()
   def allowed!(subject, context, action, policy) do
     case allowed(subject, context, action, policy) do
-      {:ok, subject} -> subject
-      {:error, error} -> raise error
+      {:ok, subject} ->
+        subject
+
+      {:error, {:unauthorized, %Airframe.UnauthorizedError{} = error}} ->
+        raise error
+
+      {:error, reason} when is_binary(reason) ->
+        raise Airframe.PolicyError, message: reason
+
+      {:error, reason} ->
+        raise Airframe.PolicyError, message: inspect(reason)
     end
   end
 
@@ -90,7 +90,7 @@ defmodule Airframe.Policy do
         # simply
         use Airframe.Policy
 
-        # or if you want to implement `allow?/3` in a different module:
+        # or if you want to implement `allow/3` in a different module:
         use Airframe.Policy, delegate: MyApp.Context.Policy
       end
   """
@@ -111,8 +111,8 @@ defmodule Airframe.Policy do
       # are we delegating to another module?
       {:ok, module} when is_atom(module) ->
         quote do
-          def allow?(subject, context, action) do
-            unquote(module).allow?(subject, context, action)
+          def allow(subject, context, action) do
+            unquote(module).allow(subject, context, action)
           end
         end
 
@@ -121,7 +121,7 @@ defmodule Airframe.Policy do
         case Keyword.fetch(opts, :default) do
           {:ok, default} when is_boolean(default) ->
             quote do
-              def allow?(_, _, _), do: unquote(default)
+              def allow(_, _, _), do: unquote(default)
             end
 
           :error ->
