@@ -13,6 +13,9 @@ defmodule AirframeMacroTest do
 
       def allow?(_subject, _context, :a!), do: true
       def allow?(_subject, _context, :b!), do: false
+
+      def allow?(nil, _context, :no_subject?), do: true
+      def allow?(_subject, _context, :custom_action), do: true
     end
 
     use Airframe.Policy, delegate: TestPolicy
@@ -25,6 +28,10 @@ defmodule AirframeMacroTest do
 
     def a!(), do: Airframe.allowed!(:my_subject, :me)
     def b!(), do: Airframe.allowed!(:my_subject, :me)
+
+    def no_subject?(), do: Airframe.allowed?(:me)
+
+    def with_action?(), do: Airframe.allowed?(:my_subject, :me, :custom_action)
   end
 
   test "macro Airframe.allowed?/2 of function Airframe.allowed?/4" do
@@ -47,5 +54,13 @@ defmodule AirframeMacroTest do
   test "macro Airframe.allowed!/2 of function Airframe.allowed!/4" do
     assert :my_subject == TestContext.a!()
     assert_raise Airframe.UnauthorizedError, fn -> TestContext.b!() end
+  end
+
+  test "macro Airframe.allowed?/1 of function Airframe.allowed?/4" do
+    assert TestContext.no_subject?()
+  end
+
+  test "macro Airframe.allowed?/3 of function Airframe.allowed?/4" do
+    assert TestContext.with_action?()
   end
 end

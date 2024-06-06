@@ -61,12 +61,14 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed?(subject, context) do
+  defmacro allowed?(subject \\ nil, context, action \\ nil) do
+    action = action || elem(__CALLER__.function, 0)
+
     quote do
       Airframe.allowed?(
         unquote(subject),
         unquote(context),
-        unquote(elem(__CALLER__.function, 0)),
+        unquote(action),
         unquote(__CALLER__.module)
       )
     end
@@ -78,12 +80,14 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed!(subject, context) do
+  defmacro allowed!(subject \\ nil, context, action \\ nil) do
+    action = action || elem(__CALLER__.function, 0)
+
     quote do
       Airframe.allowed!(
         unquote(subject),
         unquote(context),
-        unquote(elem(__CALLER__.function, 0)),
+        unquote(action),
         unquote(__CALLER__.module)
       )
     end
@@ -95,12 +99,14 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed(subject, context) do
+  defmacro allowed(subject \\ nil, context, action \\ nil) do
+    action = action || elem(__CALLER__.function, 0)
+
     quote do
       Airframe.allowed(
         unquote(subject),
         unquote(context),
-        unquote(elem(__CALLER__.function, 0)),
+        unquote(action),
         unquote(__CALLER__.module)
       )
     end
