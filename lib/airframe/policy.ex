@@ -23,6 +23,58 @@ defmodule Airframe.Policy do
               action :: Airframe.action()
             ) :: boolean
 
+  ##
+  ## Functions
+  ##
+
+  @spec allowed?(
+          subject :: Airframe.subject(),
+          context :: Airframe.context(),
+          action :: Airframe.action(),
+          policy :: Airframe.policy()
+        ) :: boolean
+  def allowed?(subject, context, action, policy) do
+    case policy.allow?(subject, context, action) do
+      true -> true
+      false -> false
+    end
+  end
+
+  @spec allowed(
+          subject :: Airframe.subject(),
+          context :: Airframe.context(),
+          action :: Airframe.action(),
+          policy :: Airframe.policy()
+        ) :: :ok | {:error, Airframe.UnauthorizedError.t()}
+  def allowed(subject, context, action, policy) do
+    case allowed?(subject, context, action, policy) do
+      true ->
+        {:ok, subject}
+
+      false ->
+        {:error,
+         %Airframe.UnauthorizedError{
+           policy: policy,
+           context: context,
+           action: action,
+           subject: subject
+         }}
+    end
+  end
+
+  @spec allowed!(
+          subject :: Airframe.subject(),
+          context :: Airframe.context(),
+          action :: Airframe.action(),
+          policy :: Airframe.policy()
+        ) :: :ok | no_return()
+  def allowed!(subject, context, action, policy) do
+    case allowed(subject, context, action, policy) do
+      {:ok, subject} -> subject
+      {:error, error} -> raise error
+    end
+  end
+
   @doc """
   Automatically implements the `Airframe.Policy` behaviour.
 

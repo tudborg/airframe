@@ -4,57 +4,24 @@ defmodule Airframe do
   @type action :: any()
   @type policy :: module()
 
-  @spec allowed?(
-          subject :: Airframe.subject(),
-          context :: Airframe.context(),
-          action :: Airframe.action(),
-          policy :: Airframe.policy()
-        ) :: boolean
-  def allowed?(subject, context, action, policy) do
-    case policy.allow?(subject, context, action) do
-      true -> true
-      false -> false
-    end
-  end
+  # Policy
+  defdelegate allowed?(subject, context, action, policy), to: Airframe.Policy
+  defdelegate allowed(subject, context, action, policy), to: Airframe.Policy
+  defdelegate allowed!(subject, context, action, policy), to: Airframe.Policy
 
-  @spec allowed(
-          subject :: Airframe.subject(),
-          context :: Airframe.context(),
-          action :: Airframe.action(),
-          policy :: Airframe.policy()
-        ) :: :ok | {:error, Airframe.UnauthorizedError.t()}
-  def allowed(subject, context, action, policy) do
-    case policy.allow?(subject, context, action) do
-      true ->
-        {:ok, subject}
+  # Context
+  defdelegate tag(subject, context), to: Airframe.Context
+  defdelegate context(subject), to: Airframe.Context
+  defdelegate context!(subject), to: Airframe.Context
+  defdelegate same?(subject_context, trusted_context), to: Airframe.Context
 
-      false ->
-        {:error,
-         %Airframe.UnauthorizedError{
-           policy: policy,
-           context: context,
-           action: action,
-           subject: subject
-         }}
-    end
-  end
-
-  @spec allowed!(
-          subject :: Airframe.subject(),
-          context :: Airframe.context(),
-          action :: Airframe.action(),
-          policy :: Airframe.policy()
-        ) :: :ok | no_return()
-  def allowed!(subject, context, action, policy) do
-    case allowed(subject, context, action, policy) do
-      {:ok, subject} -> subject
-      {:error, error} -> raise error
-    end
-  end
+  # Resource
+  defdelegate scope(queryable, context, opts \\ []), to: Airframe.Resource
 
   ##
-  ## Airframe macros for checking policies.
+  ## Macros
   ##
+
   @doc """
   Macro version of `Airframe.allowed?/4`.
 
