@@ -6,7 +6,7 @@ defmodule Airframe.Resource do
   @doc """
   Scope a queryable to the provided context.
   """
-  @callback scope(queryable :: Ecto.Queryable.t(), context :: any(), opts :: Keyword.t()) ::
+  @callback scope(queryable :: Ecto.Queryable.t(), context :: any(), scope :: any()) ::
               Ecto.Queryable.t()
 
   @doc """
@@ -24,11 +24,17 @@ defmodule Airframe.Resource do
 
   Calls the Schema's scope/3` function.
   """
-  def scope(queryable, context, opts) do
+  def scope(queryable, context, scope) do
     case Ecto.Queryable.to_query(queryable) do
       %Ecto.Query{from: %{source: {_source, schema}}} when not is_nil(schema) ->
-        case schema.scope(queryable, context, opts) do
-          %Ecto.Query{} = query -> query
+        queryable = schema.scope(queryable, context, scope)
+
+        if is_nil(Ecto.Queryable.impl_for(queryable)) do
+          raise ArgumentError,
+                "#{inspect(schema)}.scope/3 must return a value that implements the Ecto.Queryable protocol." <>
+                  "\nBut scope #{inspect(scope)} returned #{inspect(queryable)}"
+        else
+          queryable
         end
     end
   end

@@ -5,6 +5,7 @@ defmodule Airframe do
   @type policy :: module()
 
   # Policy
+  # TODO: Should allowed be named `check` instead?
   defdelegate allowed(subject, context, action, policy), to: Airframe.Policy
   defdelegate allowed!(subject, context, action, policy), to: Airframe.Policy
 
