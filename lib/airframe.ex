@@ -16,7 +16,7 @@ defmodule Airframe do
   defdelegate same?(subject_context, trusted_context), to: Airframe.Context
 
   # Resource
-  defdelegate scope(queryable, context, opts \\ []), to: Airframe.Resource
+  defdelegate scope(queryable, scope), to: Airframe.Resource
 
   ##
   ## Macros

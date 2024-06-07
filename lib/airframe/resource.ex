@@ -1,12 +1,15 @@
 defmodule Airframe.Resource do
   @moduledoc """
-  Query module for Airframe, wrapping Ecto.Query and Repo functions to check and annotate authentication.
+  A behaviour to extend Ecto.Schema modules with query scoping conventions.
+
+  This module is intended to be used with `use Airframe.Resource` in your schema modules,
+  and serves mostly to document your intention of implementing the `scope/2` function.
   """
 
   @doc """
   Scope a queryable to the provided context.
   """
-  @callback scope(queryable :: Ecto.Queryable.t(), context :: any(), scope :: any()) ::
+  @callback scope(queryable :: Ecto.Queryable.t(), scope :: any()) ::
               Ecto.Queryable.t()
 
   @doc """
@@ -20,14 +23,18 @@ defmodule Airframe.Resource do
   end
 
   @doc """
-  Scope a queryable to the provided context.
+  Scope a queryable, typically to a user's permissions, but can be any scoping rules.
 
-  Calls the Schema's scope/3` function.
+  Calls the Schema's scope/2` function.
+
+  ## Example
+
+      Airframe.Resource.scope(query, my_user_struct)
   """
-  def scope(queryable, context, scope) do
+  def scope(queryable, scope) do
     case Ecto.Queryable.to_query(queryable) do
       %Ecto.Query{from: %{source: {_source, schema}}} when not is_nil(schema) ->
-        queryable = schema.scope(queryable, context, scope)
+        queryable = schema.scope(queryable, scope)
 
         if is_nil(Ecto.Queryable.impl_for(queryable)) do
           raise ArgumentError,
