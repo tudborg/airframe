@@ -52,6 +52,10 @@ defmodule Airframe.Policy do
       # policy error. forward to caller:
       {:error, reason} ->
         {:error, reason}
+
+      # defer policy check to another policy module
+      {:defer, new_policy} ->
+        check(subject, action, context, new_policy)
     end
   end
 
@@ -114,7 +118,7 @@ defmodule Airframe.Policy do
       {:ok, module} when is_atom(module) ->
         quote do
           def allow(action, subject, context) do
-            unquote(module).allow(action, subject, context)
+            {:defer, unquote(module)}
           end
         end
 

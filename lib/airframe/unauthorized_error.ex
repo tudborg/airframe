@@ -1,8 +1,10 @@
 defmodule Airframe.UnauthorizedError do
-  defexception [:subject, :context, :action, :policy]
+  defexception [:subject, :action, :context, :policy, :hint]
 
-  def message(%__MODULE__{subject: s, context: c, action: a, policy: p}) do
-    "policy=#{inspect(p)} did not allow action=#{inspect(a)} on subject=#{show(s)} for context=#{show(c)}"
+  def message(%__MODULE__{subject: s, context: c, action: a, policy: p, hint: h}) do
+    "policy=#{inspect(p)} did not allow action=#{inspect(a)}" <>
+      " on subject=#{show(s)} for context=#{show(c)}" <>
+      if h, do: " (hint=#{h})", else: ""
   end
 
   # show an ecto schema struct, just pick the primary key fields:
@@ -13,6 +15,14 @@ defmodule Airframe.UnauthorizedError do
       |> Enum.join(",")
 
     "##{inspect(module)}<#{identity}>"
+  end
+
+  defp show(t) when is_tuple(t) do
+    "{#{Tuple.to_list(t) |> Enum.map(&show/1) |> Enum.join(", ")}}"
+  end
+
+  defp show(l) when is_list(l) do
+    "[#{Enum.map(l, &show/1) |> Enum.join(", ")}]"
   end
 
   # show anything else:
