@@ -29,7 +29,7 @@ defmodule Airframe.Context do
   end
 
   @doc """
-  Tag Ecto Schema tuples with authentication context.
+  Tag Ecto Schema structs with authentication context.
 
   This allows functions later down the pipeline to validate
   that the given struct was loaded with the correct context,

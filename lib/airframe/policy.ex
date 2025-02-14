@@ -8,8 +8,8 @@ defmodule Airframe.Policy do
   @doc """
   Checks if the `context` is allowed to perform the `action` on the `subject`.
 
-  Can return plain true/false, or a tuple `{:scoped, alternative_subject}` to allow the action with a different subject.
-  Can alsi return `{:error, reason :: any()}` which will be passed along to the caller.
+  Can return plain true/false, or a tuple `{:ok, alternative_subject}` to allow the action with a different subject.
+  Can also return `{:error, reason :: any()}` which will be passed along to the caller.
   """
   @callback allow(
               subject :: Airframe.subject(),

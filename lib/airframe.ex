@@ -29,7 +29,12 @@ defmodule Airframe do
   and the action from the calling function name.
   """
   defmacro allowed!(subject, context, action \\ nil) do
-    action = action || elem(__CALLER__.function, 0)
+    action =
+      action ||
+        case __CALLER__.function do
+          nil -> raise "not called inside a function"
+          {name, _arity} -> name
+        end
 
     quote do
       Airframe.allowed!(
@@ -48,7 +53,12 @@ defmodule Airframe do
   and the action from the calling function name.
   """
   defmacro allowed(subject, context, action \\ nil) do
-    action = action || elem(__CALLER__.function, 0)
+    action =
+      action ||
+        case __CALLER__.function do
+          nil -> raise "not called inside a function"
+          {name, _arity} -> name
+        end
 
     quote do
       Airframe.allowed(
