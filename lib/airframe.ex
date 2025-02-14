@@ -9,12 +9,6 @@ defmodule Airframe do
   defdelegate allowed(subject, context, action, policy), to: Airframe.Policy
   defdelegate allowed!(subject, context, action, policy), to: Airframe.Policy
 
-  # Context
-  defdelegate tag(subject, context), to: Airframe.Context
-  defdelegate context(subject), to: Airframe.Context
-  defdelegate context!(subject), to: Airframe.Context
-  defdelegate same?(subject_context, trusted_context), to: Airframe.Context
-
   # Resource
   defdelegate scope(queryable, scope), to: Airframe.Resource
 
