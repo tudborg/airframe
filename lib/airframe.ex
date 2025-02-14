@@ -5,8 +5,8 @@ defmodule Airframe do
   @type policy :: module()
 
   # Policy
-  defdelegate check(action, subject, context, policy), to: Airframe.Policy
-  defdelegate check!(action, subject, context, policy), to: Airframe.Policy
+  defdelegate check(subject, action, context, policy), to: Airframe.Policy
+  defdelegate check!(subject, action, context, policy), to: Airframe.Policy
 
   # Resource
   defdelegate scope(queryable, scope), to: Airframe.Resource
@@ -21,7 +21,7 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro check!(action \\ nil, subject, context) do
+  defmacro check!(subject, action \\ nil, context) do
     action =
       action ||
         case __CALLER__.function do
@@ -31,8 +31,8 @@ defmodule Airframe do
 
     quote do
       Airframe.check!(
-        unquote(action),
         unquote(subject),
+        unquote(action),
         unquote(context),
         unquote(__CALLER__.module)
       )
@@ -45,7 +45,7 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro check(action \\ nil, subject, context) do
+  defmacro check(subject, action \\ nil, context) do
     action =
       action ||
         case __CALLER__.function do
@@ -55,8 +55,8 @@ defmodule Airframe do
 
     quote do
       Airframe.check(
-        unquote(action),
         unquote(subject),
+        unquote(action),
         unquote(context),
         unquote(__CALLER__.module)
       )

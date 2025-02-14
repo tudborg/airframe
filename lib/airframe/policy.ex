@@ -14,22 +14,22 @@ defmodule Airframe.Policy do
   Can also return `{:error, reason :: any()}` which will be passed along to the caller.
   """
   @callback allow(
-              action :: Airframe.action(),
               subject :: Airframe.subject(),
+              action :: Airframe.action(),
               context :: Airframe.context()
             ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
   @spec check(
-          action :: Airframe.action(),
           subject :: Airframe.subject(),
+          action :: Airframe.action(),
           context :: Airframe.context(),
           policy :: Airframe.policy()
         ) ::
           {:ok, narrowed_subject :: Airframe.subject()}
           | {:error, :unauthorized}
           | {:error, any()}
-  def check(action, subject, context, policy) do
-    case policy.allow(action, subject, context) do
+  def check(subject, action, context, policy) do
+    case policy.allow(subject, action, context) do
       # allow with same subject:
       true ->
         {:ok, subject}
@@ -39,10 +39,10 @@ defmodule Airframe.Policy do
         {:error,
          {:unauthorized,
           %Airframe.UnauthorizedError{
-            policy: policy,
-            context: context,
+            subject: subject,
             action: action,
-            subject: subject
+            context: context,
+            policy: policy
           }}}
 
       # allowed, but policy wants to define the scope:
@@ -56,13 +56,13 @@ defmodule Airframe.Policy do
   end
 
   @spec check!(
-          action :: Airframe.action(),
           subject :: Airframe.subject(),
+          action :: Airframe.action(),
           context :: Airframe.context(),
           policy :: Airframe.policy()
         ) :: Airframe.subject() | no_return()
-  def check!(action, subject, context, policy) do
-    case check(action, subject, context, policy) do
+  def check!(subject, action, context, policy) do
+    case check(subject, action, context, policy) do
       {:ok, subject} ->
         subject
 

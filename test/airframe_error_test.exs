@@ -22,7 +22,7 @@ defmodule AirframeErrorTest do
       |> Airframe.UnauthorizedError.message()
 
     assert msg ==
-             "policy=Airframe.Policy did not allow action=:write for " <>
-               "context=#AirframeErrorTest.Dummy<id=me> and subject=#AirframeErrorTest.Dummy<id=subject>"
+             "policy=Airframe.Policy did not allow action=:write on subject=#AirframeErrorTest.Dummy<id=subject> " <>
+               "for context=#AirframeErrorTest.Dummy<id=me>"
   end
 end

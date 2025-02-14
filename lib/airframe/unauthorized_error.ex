@@ -2,7 +2,7 @@ defmodule Airframe.UnauthorizedError do
   defexception [:subject, :context, :action, :policy]
 
   def message(%__MODULE__{subject: s, context: c, action: a, policy: p}) do
-    "policy=#{inspect(p)} did not allow action=#{inspect(a)} for context=#{show(c)} and subject=#{show(s)}"
+    "policy=#{inspect(p)} did not allow action=#{inspect(a)} on subject=#{show(s)} for context=#{show(c)}"
   end
 
   # show an ecto schema struct, just pick the primary key fields:

@@ -18,16 +18,16 @@ defmodule AirframePolicyTest do
 
     test "default false policy always rejects" do
       assert {:error, {:unauthorized, _}} =
-               Airframe.check(:write, :my_subject, :me, DefaultFalsePolicy)
+               Airframe.check(:my_subject, :write, :me, DefaultFalsePolicy)
     end
 
     test "default true policy returns true" do
-      assert {:ok, :my_subject} = Airframe.check(:write, :my_subject, :me, DefaultTruePolicy)
+      assert {:ok, :my_subject} = Airframe.check(:my_subject, :write, :me, DefaultTruePolicy)
     end
 
     test "no default and no allow/3 raises FunctionClauseError" do
       assert_raise FunctionClauseError, fn ->
-        Airframe.check(:write, :my_subject, :me, NoDefaultPolicy)
+        Airframe.check(:my_subject, :write, :me, NoDefaultPolicy)
       end
     end
   end
@@ -38,7 +38,7 @@ defmodule AirframePolicyTest do
   end
 
   test "implementing (_,_,_) -> true always allows" do
-    assert {:ok, :my_subject} = Airframe.check(:write, :my_subject, :me, AllowPolicy)
+    assert {:ok, :my_subject} = Airframe.check(:my_subject, :write, :me, AllowPolicy)
   end
 
   defmodule AdminPolicy do
@@ -47,21 +47,21 @@ defmodule AirframePolicyTest do
   end
 
   test "allows admin in admin policy" do
-    assert {:ok, :my_subject} = Airframe.check(:write, :my_subject, :admin, AdminPolicy)
+    assert {:ok, :my_subject} = Airframe.check(:my_subject, :write, :admin, AdminPolicy)
   end
 
   test "refuses me in admin policy" do
     assert {:error, {:unauthorized, _}} =
-             Airframe.check(:write, :my_subject, :me, AdminPolicy)
+             Airframe.check(:my_subject, :write, :me, AdminPolicy)
   end
 
   defmodule ScopingPolicy do
     use Airframe.Policy
-    def allow(:read, :my_subject, :me), do: {:ok, :my_scoped_subject}
+    def allow(:my_subject, :read, :me), do: {:ok, :my_scoped_subject}
   end
 
   test "allow scopes the subject" do
     assert {:ok, :my_scoped_subject} =
-             Airframe.check(:read, :my_subject, :me, ScopingPolicy)
+             Airframe.check(:my_subject, :read, :me, ScopingPolicy)
   end
 end
