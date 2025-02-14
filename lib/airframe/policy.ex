@@ -6,28 +6,30 @@ defmodule Airframe.Policy do
   """
 
   @doc """
-  Checks if the `context` is allowed to perform the `action` on the `subject`.
+  Checks if the `action` is allowed on `subject` by `context`.
 
-  Can return plain true/false, or a tuple `{:ok, alternative_subject}` to allow the action with a different subject.
+  Can return plain true/false, or a tuple `{:ok, scoped_subject}` to still allow the action,
+  while narrowing the scope of the original subject.
+  This is useful if the original subject is an `Ecto.Query` or similar that can be narrowed down.
   Can also return `{:error, reason :: any()}` which will be passed along to the caller.
   """
   @callback allow(
+              action :: Airframe.action(),
               subject :: Airframe.subject(),
-              context :: Airframe.context(),
-              action :: Airframe.action()
+              context :: Airframe.context()
             ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
   @spec check(
+          action :: Airframe.action(),
           subject :: Airframe.subject(),
           context :: Airframe.context(),
-          action :: Airframe.action(),
           policy :: Airframe.policy()
         ) ::
           {:ok, narrowed_subject :: Airframe.subject()}
           | {:error, :unauthorized}
           | {:error, any()}
-  def check(subject, context, action, policy) do
-    case policy.allow(subject, context, action) do
+  def check(action, subject, context, policy) do
+    case policy.allow(action, subject, context) do
       # allow with same subject:
       true ->
         {:ok, subject}
@@ -54,13 +56,13 @@ defmodule Airframe.Policy do
   end
 
   @spec check!(
+          action :: Airframe.action(),
           subject :: Airframe.subject(),
           context :: Airframe.context(),
-          action :: Airframe.action(),
           policy :: Airframe.policy()
         ) :: Airframe.subject() | no_return()
-  def check!(subject, context, action, policy) do
-    case check(subject, context, action, policy) do
+  def check!(action, subject, context, policy) do
+    case check(action, subject, context, policy) do
       {:ok, subject} ->
         subject
 
@@ -111,8 +113,8 @@ defmodule Airframe.Policy do
       # are we delegating to another module?
       {:ok, module} when is_atom(module) ->
         quote do
-          def allow(subject, context, action) do
-            unquote(module).allow(subject, context, action)
+          def allow(action, subject, context) do
+            unquote(module).allow(action, subject, context)
           end
         end
 
