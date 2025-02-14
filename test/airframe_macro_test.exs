@@ -17,22 +17,22 @@ defmodule AirframeMacroTest do
 
     use Airframe.Policy, delegate: TestPolicy
 
-    def a(), do: Airframe.allowed(:my_subject, :me)
-    def b(), do: Airframe.allowed(:my_subject, :me)
+    def a(), do: Airframe.check(:my_subject, :me)
+    def b(), do: Airframe.check(:my_subject, :me)
 
-    def a!(), do: Airframe.allowed!(:my_subject, :me)
-    def b!(), do: Airframe.allowed!(:my_subject, :me)
+    def a!(), do: Airframe.check!(:my_subject, :me)
+    def b!(), do: Airframe.check!(:my_subject, :me)
 
-    def with_action(), do: Airframe.allowed(:my_subject, :me, :custom_action)
+    def with_action(), do: Airframe.check(:my_subject, :me, :custom_action)
   end
 
-  test "macro Airframe.allowed/2 of function Airframe.allowed/4" do
+  test "macro Airframe.check/2 of function Airframe.check/4" do
     assert {:ok, :my_subject} == TestContext.a()
 
     assert {:error, {:unauthorized, _}} = TestContext.b()
   end
 
-  test "macro Airframe.allowed!/2 of function Airframe.allowed!/4" do
+  test "macro Airframe.check!/2 of function Airframe.check!/4" do
     assert :my_subject == TestContext.a!()
     assert_raise Airframe.UnauthorizedError, fn -> TestContext.b!() end
   end

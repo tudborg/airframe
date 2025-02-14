@@ -5,9 +5,8 @@ defmodule Airframe do
   @type policy :: module()
 
   # Policy
-  # TODO: Should allowed be named `check` instead?
-  defdelegate allowed(subject, context, action, policy), to: Airframe.Policy
-  defdelegate allowed!(subject, context, action, policy), to: Airframe.Policy
+  defdelegate check(subject, context, action, policy), to: Airframe.Policy
+  defdelegate check!(subject, context, action, policy), to: Airframe.Policy
 
   # Resource
   defdelegate scope(queryable, scope), to: Airframe.Resource
@@ -17,12 +16,12 @@ defmodule Airframe do
   ##
 
   @doc """
-  Macro version of `Airframe.allowed!/4`.
+  Macro version of `Airframe.check!/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed!(subject, context, action \\ nil) do
+  defmacro check!(subject, context, action \\ nil) do
     action =
       action ||
         case __CALLER__.function do
@@ -31,7 +30,7 @@ defmodule Airframe do
         end
 
     quote do
-      Airframe.allowed!(
+      Airframe.check!(
         unquote(subject),
         unquote(context),
         unquote(action),
@@ -41,12 +40,12 @@ defmodule Airframe do
   end
 
   @doc """
-  Macro version of `Airframe.allowed/4`.
+  Macro version of `Airframe.check/4`.
 
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro allowed(subject, context, action \\ nil) do
+  defmacro check(subject, context, action \\ nil) do
     action =
       action ||
         case __CALLER__.function do
@@ -55,7 +54,7 @@ defmodule Airframe do
         end
 
     quote do
-      Airframe.allowed(
+      Airframe.check(
         unquote(subject),
         unquote(context),
         unquote(action),

@@ -17,7 +17,7 @@ defmodule Airframe.Policy do
               action :: Airframe.action()
             ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
-  @spec allowed(
+  @spec check(
           subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
@@ -26,7 +26,7 @@ defmodule Airframe.Policy do
           {:ok, narrowed_subject :: Airframe.subject()}
           | {:error, :unauthorized}
           | {:error, any()}
-  def allowed(subject, context, action, policy) do
+  def check(subject, context, action, policy) do
     case policy.allow(subject, context, action) do
       # allow with same subject:
       true ->
@@ -53,14 +53,14 @@ defmodule Airframe.Policy do
     end
   end
 
-  @spec allowed!(
+  @spec check!(
           subject :: Airframe.subject(),
           context :: Airframe.context(),
           action :: Airframe.action(),
           policy :: Airframe.policy()
         ) :: Airframe.subject() | no_return()
-  def allowed!(subject, context, action, policy) do
-    case allowed(subject, context, action, policy) do
+  def check!(subject, context, action, policy) do
+    case check(subject, context, action, policy) do
       {:ok, subject} ->
         subject
 
