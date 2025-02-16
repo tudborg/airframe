@@ -8,9 +8,6 @@ defmodule Airframe do
   defdelegate check(subject, action, context, policy), to: Airframe.Policy
   defdelegate check!(subject, action, context, policy), to: Airframe.Policy
 
-  # Resource
-  defdelegate scope(queryable, scope), to: Airframe.Resource
-
   ##
   ## Macros
   ##

@@ -19,6 +19,12 @@ defmodule Airframe.Policy do
               context :: Airframe.context()
             ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
+  @doc """
+  Checks if the `action` is allowed on `subject` for `context` by `policy`.
+
+  If the `ecto_changeset` feature flag is enabled (default: true),
+  this function will return `{:error, changeset}` if the `subject` is an `Ecto.Changeset` and is marked as invalid.
+  """
   @spec check(
           subject :: Airframe.subject(),
           action :: Airframe.action(),
@@ -28,6 +34,15 @@ defmodule Airframe.Policy do
           {:ok, narrowed_subject :: Airframe.subject()}
           | {:error, :unauthorized}
           | {:error, any()}
+
+  # if ecto changeset support is enabled, `check/4`
+  # will always return {:error, changeset} if the changeset is marked invalid.
+  if Airframe.Feature.supported?(:ecto_changeset) do
+    def check(%{__struct__: :"Elixir.Ecto.Changeset", valid?: false} = changeset) do
+      {:error, changeset}
+    end
+  end
+
   def check(subject, action, context, policy) do
     case policy.allow(subject, action, context) do
       # allow with same subject:
@@ -59,6 +74,11 @@ defmodule Airframe.Policy do
     end
   end
 
+  @doc """
+  Checks if the `action` is allowed on `subject` for `context` by `policy`.
+
+  Like `check/4`, but raises an `Airframe.UnauthorizedError` if the action is not allowed.
+  """
   @spec check!(
           subject :: Airframe.subject(),
           action :: Airframe.action(),
@@ -66,7 +86,12 @@ defmodule Airframe.Policy do
           policy :: Airframe.policy()
         ) :: Airframe.subject() | no_return()
   def check!(subject, action, context, policy) do
-    case check(subject, action, context, policy) do
+    unwrap!(check(subject, action, context, policy))
+  end
+
+  @doc false
+  def unwrap!(result) do
+    case result do
       {:ok, subject} ->
         subject
 

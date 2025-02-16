@@ -27,6 +27,8 @@ defmodule Airframe.MixProject do
   end
 
   defp deps do
-    [{:ecto, "~> 3.10"}]
+    [
+      {:ecto, "~> 3.10", optional: true}
+    ]
   end
 end

@@ -3,9 +3,6 @@ defmodule Airframe.Case do
 
   using do
     quote do
-      # import Ecto
-      # import Ecto.Changeset
-      # import Ecto.Query
       import Airframe.Case
     end
   end
