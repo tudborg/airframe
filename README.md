@@ -1,17 +1,21 @@
 # Airframe
 
-Airframe is a libraries for specifying access policies.
-
-A policy is a module implementing checks against a subject and action given an authentication context.
-It differentiates itself from other similar libraries by allowing the policy to change the subject.
-
-This makes it possible to combine access scoping and action checking in the same tool.
+Airframe is an authorization library.
 
 Documentation can be found at <https://hexdocs.pm/airframe>.
 
-Airframe is a library for generating the frame of a context module.
-You still have to add your own business and domain logic, but Airframe will
-provide you with the basics.
+At it's core is the `Airframe.Policy` that you implement for all relevant "subjects".  
+A policy is a module implemetning `allow/3`, where you implement checks against a subject and action for an authentication "context" like a `current_user` or session token.
+
+It differentiates itself from other similar libraries by allowing the policy to change the subject, like:
+- Changing an `Ecto.Query` to narrow done the scope to the current user.
+- Removing changes from an `Ecto.Changeset` based on the current user's access level.
+- Completely replacing the subject with an alternative subject.
+- 
+This makes it possible to combine access scoping and action checking in a single policy.
+
+It can be used anywhere in your application, but is intended to be used in your context modules to
+ensure that authorization is handled at the same abstraction level everywhere, regardless of interface.
 
 ## Installation
 
@@ -27,9 +31,28 @@ end
 
 ## Examples
 
-You define a Policy like
+You can define a Policy directly in a context:
 
 ```elixir
+defmodule MyApp.MyContext do
+  use Airframe.Policy
+
+  @spec allow(subject, action, context)
+  def allow(_subject_, _action, _context)do
+    true # allow everything by anyone!
+  end
+end
+```
+
+Or more typically in a larger context module, you defer the policy to it's own module:
+
+```elixir
+defmodule MyApp.MyContext do
+  use Airframe.Policy, defer: MyApp.MyContext.MyPolicy
+
+  # ...
+end
+
 defmodule MyApp.MyContext.MyPolicy do
   use Airframe.Policy
 
@@ -40,7 +63,9 @@ defmodule MyApp.MyContext.MyPolicy do
 end
 ```
 
-and check against it with `Airframe.check/4`
+### Authorization
+
+You check against a policy with `Airframe.check/4`
 
 ```elixir
 # context == the current authentication, e.g. conn.assigns.current_user, or an API key, etc
@@ -49,7 +74,23 @@ with {:ok, subject} <- Airframe.check(subject, action, context, policy) do
 end
 ```
 
-There is a macro `Airframe.check/2` that will infer the policy and optionally the action from the calling context.
+and it's `raise`ing version `Airframe.check!/4`:
+
+```elixir
+Airframe.check(subject, action, context, policy)
+```
+
+which is very convenient if your subject is a schema module or ecto query:
+
+```elixir
+def list(opts) do
+  Post
+  |> Airframe.check!(:read, opts[:current_user], MyPolicy)
+  |> Repo.all()
+end
+```
+
+There is an `Airframe.check/2` macro that will infer the policy and optionally the action from the calling context.
 
 ```elixir
 defmodule MyApp.MyContext do
@@ -71,7 +112,7 @@ defmodule MyApp.MyContext do
 end
 ```
 
-Full example
+### Full Example
 
 ```elixir
 defmodule MyApp.MyContext do
