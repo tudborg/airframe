@@ -5,14 +5,14 @@ defmodule AirframeMacroTest do
   defmodule TestContext do
     defmodule TestPolicy do
       use Airframe.Policy
-      def allow(_subject, :a, _context), do: true
-      def allow(_subject, :b, _context), do: false
+      def allow(_subject, :a, _actor), do: true
+      def allow(_subject, :b, _actor), do: false
 
-      def allow(_subject, :a!, _context!), do: true
-      def allow(_subject, :b!, _context!), do: false
+      def allow(_subject, :a!, _actor), do: true
+      def allow(_subject, :b!, _actor), do: false
 
-      def allow(:no_subject, nil, _context), do: true
-      def allow(_subject, :custom_action, _context), do: true
+      def allow(:no_subject, nil, _actor), do: true
+      def allow(_subject, :custom_action, _actor), do: true
     end
 
     use Airframe.Policy, defer: TestPolicy

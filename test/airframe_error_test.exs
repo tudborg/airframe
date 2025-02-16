@@ -15,7 +15,7 @@ defmodule AirframeErrorTest do
     msg =
       %Airframe.UnauthorizedError{
         policy: Airframe.Policy,
-        context: %Dummy{id: :me},
+        actor: %Dummy{id: :me},
         action: :write,
         subject: %Dummy{id: :subject}
       }
@@ -23,6 +23,6 @@ defmodule AirframeErrorTest do
 
     assert msg ==
              "policy=Airframe.Policy did not allow action=:write on subject=#AirframeErrorTest.Dummy<id=subject> " <>
-               "for context=#AirframeErrorTest.Dummy<id=me>"
+               "for actor=#AirframeErrorTest.Dummy<id=me>"
   end
 end

@@ -13,7 +13,7 @@ defmodule Airframe.Policy do
   """
 
   @doc """
-  Checks if the `action` is allowed on `subject` by `context`.
+  Checks if the `action` is allowed on `subject` by `actor`.
 
   Can return plain true/false, or a tuple `{:ok, scoped_subject}` to still allow the action,
   while narrowing the scope of the original subject.
@@ -23,11 +23,11 @@ defmodule Airframe.Policy do
   @callback allow(
               subject :: Airframe.subject(),
               action :: Airframe.action(),
-              context :: Airframe.context()
+              actor :: Airframe.actor()
             ) :: boolean() | {:ok, scoped_subject :: any()} | {:error, any()}
 
   @doc """
-  Checks if the `action` is allowed on `subject` for `context` by `policy`.
+  Checks if the `action` is allowed on `subject` for `actor` by `policy`.
 
   If the `ecto_changeset` feature flag is enabled (default: true),
   this function will return `{:error, changeset}` if the `subject` is an `Ecto.Changeset` and is marked as invalid.
@@ -35,7 +35,7 @@ defmodule Airframe.Policy do
   @spec check(
           subject :: Airframe.subject(),
           action :: Airframe.action(),
-          context :: Airframe.context(),
+          actor :: Airframe.actor(),
           policy :: Airframe.policy()
         ) ::
           {:ok, narrowed_subject :: Airframe.subject()}
@@ -48,15 +48,15 @@ defmodule Airframe.Policy do
     def check(
           %{__struct__: :"Elixir.Ecto.Changeset", valid?: false} = changeset,
           _action,
-          _context,
+          _actor,
           _policy
         ) do
       {:error, changeset}
     end
   end
 
-  def check(subject, action, context, policy) do
-    case policy.allow(subject, action, context) do
+  def check(subject, action, actor, policy) do
+    case policy.allow(subject, action, actor) do
       # allow with same subject:
       true ->
         {:ok, subject}
@@ -68,7 +68,7 @@ defmodule Airframe.Policy do
           %Airframe.UnauthorizedError{
             subject: subject,
             action: action,
-            context: context,
+            actor: actor,
             policy: policy
           }}}
 
@@ -82,23 +82,23 @@ defmodule Airframe.Policy do
 
       # defer policy check to another policy module
       {:defer, new_policy} ->
-        check(subject, action, context, new_policy)
+        check(subject, action, actor, new_policy)
     end
   end
 
   @doc """
-  Checks if the `action` is allowed on `subject` for `context` by `policy`.
+  Checks if the `action` is allowed on `subject` for `actor` by `policy`.
 
   Like `check/4`, but raises an `Airframe.UnauthorizedError` if the action is not allowed.
   """
   @spec check!(
           subject :: Airframe.subject(),
           action :: Airframe.action(),
-          context :: Airframe.context(),
+          actor :: Airframe.actor(),
           policy :: Airframe.policy()
         ) :: Airframe.subject() | no_return()
-  def check!(subject, action, context, policy) do
-    unwrap!(check(subject, action, context, policy))
+  def check!(subject, action, actor, policy) do
+    unwrap!(check(subject, action, actor, policy))
   end
 
   @doc false
@@ -155,7 +155,7 @@ defmodule Airframe.Policy do
       # are we delegating to another module?
       {:ok, module} when is_atom(module) ->
         quote do
-          def allow(action, subject, context) do
+          def allow(_action, _subject, _actor) do
             {:defer, unquote(module)}
           end
         end
@@ -165,7 +165,7 @@ defmodule Airframe.Policy do
         case Keyword.fetch(opts, :default) do
           {:ok, default} when is_boolean(default) ->
             quote do
-              def allow(_, _, _), do: unquote(default)
+              def allow(_action, _subject, _actor), do: unquote(default)
             end
 
           :error ->

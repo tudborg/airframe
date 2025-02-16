@@ -1,9 +1,9 @@
 defmodule Airframe.UnauthorizedError do
-  defexception [:subject, :action, :context, :policy, :hint]
+  defexception [:subject, :action, :actor, :policy, :hint]
 
-  def message(%__MODULE__{subject: s, context: c, action: a, policy: p, hint: h}) do
+  def message(%__MODULE__{subject: s, actor: c, action: a, policy: p, hint: h}) do
     "policy=#{inspect(p)} did not allow action=#{inspect(a)}" <>
-      " on subject=#{show(s)} for context=#{show(c)}" <>
+      " on subject=#{show(s)} for actor=#{show(c)}" <>
       if h, do: " (hint=#{h})", else: ""
   end
 

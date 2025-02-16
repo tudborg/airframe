@@ -9,8 +9,8 @@ defmodule Airframe do
       defmodule MyApp.MyContext.MyPolicy do
         use Airframe.Policy
 
-        @spec allow(subject, action, context)
-        def allow(_subject_, _action, _context)do
+        @spec allow(subject, action, actor)
+        def allow(_subject_, _action, _actor)do
           true # allow everything by anyone!
         end
       end
@@ -20,10 +20,10 @@ defmodule Airframe do
       def delete(subject, opts) do
         # subject - the object to be acted upon
         # action - the action to be performed on the subject
-        # context - the current authentication, e.g. conn.assigns.current_user, or an API key, etc
+        # actor - the current authentication, e.g. conn.assigns.current_user, or an API key, etc
         # policy - the module that implements the `Airframe.Policy` behaviour to check against
-        with {:ok, subject} <- Airframe.check(subject, action, context, policy) do
-          # context is allowed to perform action on subject according to policy.
+        with {:ok, subject} <- Airframe.check(subject, action, actor, policy) do
+          # actor is allowed to perform action on subject according to policy.
         end
       end
 
@@ -48,12 +48,12 @@ defmodule Airframe do
   @type subject :: any()
 
   @typedoc """
-  The context of the action.
+  The actor of the action.
 
   This is typically the current user, session token, or some other
   value that represents the actor of the action.
   """
-  @type context :: any()
+  @type actor :: any()
 
   @typedoc """
   The action to be performed on the subject.
@@ -69,8 +69,8 @@ defmodule Airframe do
   @type policy :: module()
 
   # Policy
-  defdelegate check(subject, action, context, policy), to: Airframe.Policy
-  defdelegate check!(subject, action, context, policy), to: Airframe.Policy
+  defdelegate check(subject, action, actor, policy), to: Airframe.Policy
+  defdelegate check!(subject, action, actor, policy), to: Airframe.Policy
 
   ##
   ## Macros
@@ -91,13 +91,13 @@ defmodule Airframe do
           # infer the action to be the name of the calling function (`create`)
           # and the policy to be the calling module (`MyApp.MyContext`)
           changeset = %Post{} |> Post.changeset(attr)
-          with {:ok, changeset} <- Airframe.check(changeset, context) do
-            # context is allowed to perform action on changeset according to policy.
+          with {:ok, changeset} <- Airframe.check(changeset, actor) do
+            # actor is allowed to perform action on changeset according to policy.
           end
         end
       end
   """
-  defmacro check(subject, action \\ nil, context) do
+  defmacro check(subject, action \\ nil, actor) do
     action =
       action ||
         case __CALLER__.function do
@@ -109,7 +109,7 @@ defmodule Airframe do
       Airframe.check(
         unquote(subject),
         unquote(action),
-        unquote(context),
+        unquote(actor),
         unquote(__CALLER__.module)
       )
     end
@@ -121,7 +121,7 @@ defmodule Airframe do
   Infers the policy from the calling module,
   and the action from the calling function name.
   """
-  defmacro check!(subject, action \\ nil, context) do
+  defmacro check!(subject, action \\ nil, actor) do
     action =
       action ||
         case __CALLER__.function do
@@ -133,7 +133,7 @@ defmodule Airframe do
       Airframe.check!(
         unquote(subject),
         unquote(action),
-        unquote(context),
+        unquote(actor),
         unquote(__CALLER__.module)
       )
     end

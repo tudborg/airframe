@@ -5,7 +5,7 @@ Airframe is an authorization library.
 Documentation can be found at <https://hexdocs.pm/airframe>.
 
 At it's core is the `Airframe.Policy` that you implement for all relevant "subjects".  
-A policy is a module implemetning `c:Airframe.Policy.allow/3`, where you implement checks against a subject and action for an authentication "context" like a `current_user` or session token.
+A policy is a module implemetning `c:Airframe.Policy.allow/3`, where you implement checks against a subject and action for some "actor" like a `current_user` or session token.
 
 It differentiates itself from other similar libraries by allowing the policy to change the subject, like:
 - Changing an `Ecto.Query` to narrow done the scope to the current user.
@@ -37,8 +37,8 @@ You can define a Policy directly in a context:
 defmodule MyApp.MyContext do
   use Airframe.Policy
 
-  @spec allow(subject, action, context)
-  def allow(_subject_, _action, _context)do
+  @spec allow(subject, action, actor)
+  def allow(_subject_, _action, _actor)do
     true # allow everything by anyone!
   end
 end
@@ -56,8 +56,8 @@ end
 defmodule MyApp.MyContext.MyPolicy do
   use Airframe.Policy
 
-  @spec allow(subject, action, context)
-  def allow(_subject_, _action, _context)do
+  @spec allow(subject, action, actor)
+  def allow(_subject_, _action, _actor)do
     true # allow everything by anyone!
   end
 end
@@ -68,16 +68,15 @@ end
 You check against a policy with `Airframe.check/4`
 
 ```elixir
-# context == the current authentication, e.g. conn.assigns.current_user, or an API key, etc
-with {:ok, subject} <- Airframe.check(subject, action, context, policy) do
-  # context is allowed to perform action on subject according to policy.
+with {:ok, subject} <- Airframe.check(subject, action, actor, policy) do
+  # actor is allowed to perform action on subject according to policy.
 end
 ```
 
 and it's `raise`ing version `Airframe.check!/4`:
 
 ```elixir
-Airframe.check(subject, action, context, policy)
+Airframe.check(subject, action, actor, policy)
 ```
 
 which is very convenient if your subject is a schema module or ecto query:
@@ -96,7 +95,7 @@ There is an `Airframe.check/2` macro that will infer the policy and optionally t
 defmodule MyApp.MyContext do
   use Airframe.Policy
 
-  def allow(_subject_, _action, _context) do
+  def allow(_subject_, _action, _actor) do
     true # allow everything by anyone!
   end
 
@@ -105,8 +104,8 @@ defmodule MyApp.MyContext do
     # and the policy to be the calling module (`MyApp.MyContext`)
     # By using `Airframe.Policy` you automatically require Airframe
     # such that the `Airframe.check/2` macro is available
-    with {:ok, subject} <- Airframe.check(subject, context) do
-      # context is allowed to perform action on subject according to policy.
+    with {:ok, subject} <- Airframe.check(subject, actor) do
+      # actor is allowed to perform action on subject according to policy.
     end
   end
 end
@@ -172,8 +171,8 @@ defmodule MyApp.MyContext.Policy do
   use Airframe.Policy
 
   # allow the `list` and `get` action on `Post`,
-  # but we narrow the scope to only posts from the auth context (User, in this case)
-  @spec allow(subject, action, context)
+  # but we narrow the scope to only posts from the actor (User, in this case)
+  @spec allow(subject, action, actor)
   def allow(Post, action, %User{id: user_id}) when action in [:list, :get] do
     {:ok, from(p in Post, where: p.user_id == ^user_id)}
   end
