@@ -15,7 +15,7 @@ defmodule AirframeMacroTest do
       def allow(_subject, :custom_action, _context), do: true
     end
 
-    use Airframe.Policy, delegate: TestPolicy
+    use Airframe.Policy, defer: TestPolicy
 
     def a(), do: Airframe.check(:my_subject, :me)
     def b(), do: Airframe.check(:my_subject, :me)

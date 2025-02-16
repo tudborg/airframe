@@ -1,8 +1,15 @@
 defmodule Airframe.Policy do
   @moduledoc """
-  The Policy behaviour.
+  The Policy behaviour, using macro, and defaults.
 
-  To use this module, you must implement the `Airframe.Policy.allow/3` callback.
+  ## Examples
+
+      defmodule MyApp.Policy do
+        use Airframe.Policy
+
+        def allow(%User{id: user_id}, :update, %{current_user: %User{id: user_id}}), do: true
+        def allow(%User{id: user_id}, :update, %{current_user: %User{id: other_id}}), do: false
+      end
   """
 
   @doc """
@@ -38,7 +45,12 @@ defmodule Airframe.Policy do
   # if ecto changeset support is enabled, `check/4`
   # will always return {:error, changeset} if the changeset is marked invalid.
   if Airframe.Feature.supported?(:ecto_changeset) do
-    def check(%{__struct__: :"Elixir.Ecto.Changeset", valid?: false} = changeset) do
+    def check(
+          %{__struct__: :"Elixir.Ecto.Changeset", valid?: false} = changeset,
+          _action,
+          _context,
+          _policy
+        ) do
       {:error, changeset}
     end
   end
@@ -107,22 +119,23 @@ defmodule Airframe.Policy do
   end
 
   @doc """
-  Automatically implements the `Airframe.Policy` behaviour.
+  Set up the module as an `Airframe.Policy`.
 
   ## Options
 
-  * `delegate` - If provided, it is the module to delegate to for policy checking instead of this module.
-
+  * `defer` - If provided, it is the module to defer to for policy checking instead of this module.
+  * `default` - If provided, a catch-all `allow/3` is appended that always returns this value.
+    This is useful for policies that always allow or deny everything by default. If not provided,
+    the user is responsible for handling all cases in their policy module.
 
   ## Example
-
 
       defmodule MyApp.Context do
         # simply
         use Airframe.Policy
 
-        # or if you want to implement `allow/3` in a different module:
-        use Airframe.Policy, delegate: MyApp.Context.Policy
+        # or if you want to implement `c:Airframe.Policy.allow/3` in a different module:
+        use Airframe.Policy, defer: MyApp.Context.Policy
       end
   """
   defmacro __using__(opts) do
@@ -138,7 +151,7 @@ defmodule Airframe.Policy do
   defmacro __before_compile__(%Macro.Env{} = env) do
     opts = Module.get_attribute(env.module, :airframe_opts, [])
 
-    case Keyword.fetch(opts, :delegate) do
+    case Keyword.fetch(opts, :defer) do
       # are we delegating to another module?
       {:ok, module} when is_atom(module) ->
         quote do

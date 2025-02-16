@@ -9,13 +9,26 @@ defmodule Airframe.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+
+      # Docs
+      name: "Airframe",
+      source_url: "https://github.com/tudborg/airframe",
+      homepage_url: nil,
+      docs: &docs/0
     ]
   end
 
   def application do
     [
       extra_applications: [:logger]
+    ]
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      extras: ["README.md"]
     ]
   end
 
@@ -28,7 +41,10 @@ defmodule Airframe.MixProject do
 
   defp deps do
     [
-      {:ecto, "~> 3.10", optional: true}
+      {:ecto, "~> 3.10", optional: true},
+
+      # docs
+      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
     ]
   end
 end

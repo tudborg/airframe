@@ -5,7 +5,7 @@ Airframe is an authorization library.
 Documentation can be found at <https://hexdocs.pm/airframe>.
 
 At it's core is the `Airframe.Policy` that you implement for all relevant "subjects".  
-A policy is a module implemetning `allow/3`, where you implement checks against a subject and action for an authentication "context" like a `current_user` or session token.
+A policy is a module implemetning `c:Airframe.Policy.allow/3`, where you implement checks against a subject and action for an authentication "context" like a `current_user` or session token.
 
 It differentiates itself from other similar libraries by allowing the policy to change the subject, like:
 - Changing an `Ecto.Query` to narrow done the scope to the current user.
@@ -96,7 +96,7 @@ There is an `Airframe.check/2` macro that will infer the policy and optionally t
 defmodule MyApp.MyContext do
   use Airframe.Policy
 
-  def allow(_subject_, _action, _context)do
+  def allow(_subject_, _action, _context) do
     true # allow everything by anyone!
   end
 
