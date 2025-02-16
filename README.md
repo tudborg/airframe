@@ -1,5 +1,9 @@
 # Airframe
 
+[![CI](https://github.com/tudborg/airframe/actions/workflows/elixir.yml/badge.svg)](https://github.com/tudborg/airframe/actions/workflows/elixir.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/airframe.svg)](https://hex.pm/packages/airframe)
+[![Documentation](https://img.shields.io/badge/documentation-gray)](https://hexdocs.pm/airframe/)
+
 Airframe is an authorization library.
 
 Documentation can be found at <https://hexdocs.pm/airframe>.
