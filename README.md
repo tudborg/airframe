@@ -93,7 +93,8 @@ def list(opts) do
 end
 ```
 
-There is an `Airframe.check/2` macro that will infer the policy and optionally the action from the calling context.
+There is an `Airframe.check/2` and `Airframe.check!/2` macro
+that will infer the policy and (optionally) the action from the calling context.
 
 ```elixir
 defmodule MyApp.MyContext do
@@ -127,7 +128,7 @@ defmodule MyApp.MyContext do
     # we want to list Post
     Post
     # we check that current_user is allowed to do so
-    # (the action is derrifed from the calling function - `list` in this case,
+    # (the action is derived from the calling function - `list` in this case,
     # you can ofc. specify the action manually as the second argument to check!/3)
     |> Airframe.check!(opts[:current_user])
     |> Repo.all()

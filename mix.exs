@@ -1,7 +1,7 @@
 defmodule Airframe.MixProject do
   use Mix.Project
 
-  @version "0.1.1"
+  @version "0.1.2"
 
   @source_url "https://github.com/tudborg/airframe"
 
@@ -54,7 +54,7 @@ defmodule Airframe.MixProject do
     """
     Airframe is an authorization library ala Bodyguard for use in your contexts.
 
-    You write Policies. A Policy authorize (and narrow scope) on subjects and actions.
+    You write Policies. A Policy authorizes (and narrows the scope of) subjects and actions.
     """
   end
 
