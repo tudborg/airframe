@@ -21,7 +21,8 @@ defmodule Airframe.MixProject do
 
       # docs
       name: "Airframe",
-      docs: &docs/0
+      docs: &docs/0,
+      test_coverage: [summary: [threshold: 80]]
     ]
   end
 
